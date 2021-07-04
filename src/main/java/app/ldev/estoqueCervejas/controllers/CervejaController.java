@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/cervejas")
@@ -23,8 +24,8 @@ public class CervejaController {
     }
 
     @GetMapping
-    public String listar(){
-        return "Lista de Cervejas";
+    public List<CervejaDTO> listarTodos() {
+        return cervejaService.listarTodos();
     }
 
     @PostMapping

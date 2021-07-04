@@ -13,11 +13,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -92,6 +93,35 @@ public class CervejaServiceTest {
 
         // Então
         assertThrows(CervejaNaoEncontradaException.class, () -> cervejaService.buscarPorNome(esperadoEncontrarCervejaDTO.getNome()));
+    }
+
+    @Test
+    void quandoListarTodosForChamadaRetorneUmaListaDeCervejas() {
+
+        // Dado
+        CervejaDTO esperadoEncontrarCervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        Cerveja esperadoEncontrarCerveja = cervejaMapper.toModel(esperadoEncontrarCervejaDTO);
+
+        //Quando
+        when(cervejaRepository.findAll()).thenReturn(Collections.singletonList(esperadoEncontrarCerveja));
+
+        //Entao
+        List<CervejaDTO> listaEncontradaCervejaDTO = cervejaService.listarTodos();
+
+        assertThat(listaEncontradaCervejaDTO, is(not(empty())));
+        assertThat(listaEncontradaCervejaDTO.get(0), is(equalTo(esperadoEncontrarCervejaDTO)));
+    }
+
+    @Test
+    void quandoNenhumRegistroCadastradoEListaToddosForChamadaEntaoRetornaUmListaVaziaDeCervejas() {
+
+        // Quando
+        when(cervejaRepository.findAll()).thenReturn(Collections.EMPTY_LIST);
+
+        // Entao
+        List<CervejaDTO> listaLimpaCervejaDTO = cervejaService.listarTodos();
+
+        assertThat(listaLimpaCervejaDTO, is(empty()));
     }
 
 }
