@@ -2,6 +2,7 @@ package app.ldev.estoqueCervejas.controllers;
 
 import app.ldev.estoqueCervejas.dto.CervejaDTO;
 import app.ldev.estoqueCervejas.exception.CervejaJaRegistradaException;
+import app.ldev.estoqueCervejas.exception.CervejaNaoEncontradaException;
 import app.ldev.estoqueCervejas.services.CervejaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,5 +31,10 @@ public class CervejaController {
     @ResponseStatus(HttpStatus.CREATED)
     public CervejaDTO criar(@RequestBody @Valid CervejaDTO cervejaDTO) throws CervejaJaRegistradaException {
         return cervejaService.criar(cervejaDTO);
+    }
+
+    @GetMapping("/{nome}")
+    public CervejaDTO buscarPorNome(@PathVariable String nome) throws CervejaNaoEncontradaException {
+        return cervejaService.buscarPorNome(nome);
     }
 }

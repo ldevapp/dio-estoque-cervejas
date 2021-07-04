@@ -3,6 +3,7 @@ package app.ldev.estoqueCervejas.services;
 import app.ldev.estoqueCervejas.dto.CervejaDTO;
 import app.ldev.estoqueCervejas.entity.Cerveja;
 import app.ldev.estoqueCervejas.exception.CervejaJaRegistradaException;
+import app.ldev.estoqueCervejas.exception.CervejaNaoEncontradaException;
 import app.ldev.estoqueCervejas.mapper.CervejaMapper;
 import app.ldev.estoqueCervejas.repository.CervejaRepository;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,12 @@ public class CervejaService {
         Cerveja cerveja = cervejaMapper.toModel(cervejaDTO);
         Cerveja salvarCerveja = cervejaRepository.save(cerveja);
         return cervejaMapper.toDTO(salvarCerveja);
+    }
+
+    public CervejaDTO buscarPorNome(String nome) throws CervejaNaoEncontradaException {
+        Cerveja cervejaEncontrada = cervejaRepository.findByNome(nome)
+                .orElseThrow(() -> new CervejaNaoEncontradaException(nome));
+        return cervejaMapper.toDTO(cervejaEncontrada);
     }
 
     private void verificarSeJaEstaRegistrado(String nome) throws CervejaJaRegistradaException {

@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class CervejaJaRegistradaException extends Exception{
 
     public CervejaJaRegistradaException(String nomeCerveja) {
-        super(String.format("Beer with name %s already registered in the system.", nomeCerveja));
+        super(String.format("Cerveja com nome %s já cadastrada no sistema.", nomeCerveja));
     }
 }

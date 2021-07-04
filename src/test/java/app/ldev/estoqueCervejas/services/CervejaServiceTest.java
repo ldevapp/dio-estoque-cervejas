@@ -4,6 +4,7 @@ import app.ldev.estoqueCervejas.builder.CervejaDTOBuilder;
 import app.ldev.estoqueCervejas.dto.CervejaDTO;
 import app.ldev.estoqueCervejas.entity.Cerveja;
 import app.ldev.estoqueCervejas.exception.CervejaJaRegistradaException;
+import app.ldev.estoqueCervejas.exception.CervejaNaoEncontradaException;
 import app.ldev.estoqueCervejas.mapper.CervejaMapper;
 import app.ldev.estoqueCervejas.repository.CervejaRepository;
 import org.junit.jupiter.api.Test;
@@ -64,31 +65,33 @@ public class CervejaServiceTest {
         assertThrows(CervejaJaRegistradaException.class, () -> cervejaService.criar(esperadoCervejaDTO));
     }
 
-//    @Test
-//    void whenValidCervejaNameIsGivenThenReturnACerveja() throws CervejaNotFoundException {
-//        // given
-//        CervejaDTO expectedFoundCervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
-//        Cerveja expectedFoundCerveja = cervejaMapper.toModel(expectedFoundCervejaDTO);
-//
-//        // when
-//        when(cervejaRepository.findByName(expectedFoundCerveja.getName())).thenReturn(Optional.of(expectedFoundCerveja));
-//
-//        // then
-//        CervejaDTO foundCervejaDTO = cervejaService.findByName(expectedFoundCervejaDTO.getName());
-//
-//        assertThat(foundCervejaDTO, is(equalTo(expectedFoundCervejaDTO)));
-//    }
-//
-//    @Test
-//    void whenNotRegisteredCervejaNameIsGivenThenThrowAnException() {
-//        // given
-//        CervejaDTO expectedFoundCervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
-//
-//        // when
-//        when(cervejaRepository.findByName(expectedFoundCervejaDTO.getName())).thenReturn(Optional.empty());
-//
-//        // then
-//        assertThrows(CervejaNotFoundException.class, () -> cervejaService.findByName(expectedFoundCervejaDTO.getName()));
-//    }
+    @Test
+    void quandoUmNomeValidoDeCervejaEFornecidoEntaoDevolvaUmaCerveja() throws CervejaNaoEncontradaException {
+
+        // Dado
+        CervejaDTO esperadoEncontrarCervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        Cerveja esperadoEncontrarCerveja = cervejaMapper.toModel(esperadoEncontrarCervejaDTO);
+
+        // Quando
+        when(cervejaRepository.findByNome(esperadoEncontrarCerveja.getNome())).thenReturn(Optional.of(esperadoEncontrarCerveja));
+
+        // Então
+        CervejaDTO encountroCervejaDTO = cervejaService.buscarPorNome(esperadoEncontrarCervejaDTO.getNome());
+
+        assertThat(encountroCervejaDTO, is(equalTo(esperadoEncontrarCervejaDTO)));
+    }
+
+    @Test
+    void quandoNaoRegistradoONomeDeCervejaEFornecidoLancaUmaExcecao() {
+
+        // Dado
+        CervejaDTO esperadoEncontrarCervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+
+        // Quando
+        when(cervejaRepository.findByNome(esperadoEncontrarCervejaDTO.getNome())).thenReturn(Optional.empty());
+
+        // Então
+        assertThrows(CervejaNaoEncontradaException.class, () -> cervejaService.buscarPorNome(esperadoEncontrarCervejaDTO.getNome()));
+    }
 
 }
