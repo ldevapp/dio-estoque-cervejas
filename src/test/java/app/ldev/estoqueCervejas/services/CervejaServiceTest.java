@@ -20,7 +20,8 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 public class CervejaServiceTest {
@@ -124,4 +125,21 @@ public class CervejaServiceTest {
         assertThat(listaLimpaCervejaDTO, is(empty()));
     }
 
+    @Test
+    void quandoDeletarEChamadaComIdValidoACervejaDeveSerExcluida() throws CervejaNaoEncontradaException  {
+
+        // Dado
+        CervejaDTO experadoExcluirCervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        Cerveja esperadoExcluirCerveja = cervejaMapper.toModel(experadoExcluirCervejaDTO);
+
+        // Quando
+        when(cervejaRepository.findById(esperadoExcluirCerveja.getId())).thenReturn(Optional.of(esperadoExcluirCerveja));
+        doNothing().when(cervejaRepository).deleteById(esperadoExcluirCerveja.getId());
+
+        // Então
+        cervejaService.deletarPorId(esperadoExcluirCerveja.getId());
+
+        verify(cervejaRepository, times(1)).findById(esperadoExcluirCerveja.getId());
+        verify(cervejaRepository, times(1)).deleteById(esperadoExcluirCerveja.getId());
+    }
 }

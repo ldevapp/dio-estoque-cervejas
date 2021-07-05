@@ -35,6 +35,11 @@ public class CervejaService {
                 .collect(Collectors.toList());
     }
 
+    public void deletarPorId(Long id) throws CervejaNaoEncontradaException {
+        verificarSeExistePorId(id);
+        cervejaRepository.deleteById(id);
+    }
+
     public CervejaDTO buscarPorNome(String nome) throws CervejaNaoEncontradaException {
         Cerveja cervejaEncontrada = cervejaRepository.findByNome(nome)
                 .orElseThrow(() -> new CervejaNaoEncontradaException(nome));
@@ -46,5 +51,10 @@ public class CervejaService {
         if (optSalvar.isPresent()) {
             throw new CervejaJaRegistradaException(nome);
         }
+    }
+
+    private Cerveja verificarSeExistePorId(Long id) throws CervejaNaoEncontradaException {
+        return cervejaRepository.findById(id)
+                .orElseThrow(() -> new CervejaNaoEncontradaException(id));
     }
 }

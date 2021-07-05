@@ -38,4 +38,10 @@ public class CervejaController {
     public CervejaDTO buscarPorNome(@PathVariable String nome) throws CervejaNaoEncontradaException {
         return cervejaService.buscarPorNome(nome);
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletarPorId(@PathVariable Long id) throws CervejaNaoEncontradaException {
+        cervejaService.deletarPorId(id);
+    }
 }

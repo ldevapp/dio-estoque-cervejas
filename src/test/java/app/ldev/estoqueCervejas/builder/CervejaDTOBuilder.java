@@ -26,7 +26,8 @@ public class CervejaDTOBuilder {
     private TipoCerveja tipo = TipoCerveja.LAGER;
 
     public CervejaDTO toCervejaDTO() {
-        return new CervejaDTO(id,
+        return new CervejaDTO(
+                id,
                 nome,
                 marca,
                 max,
