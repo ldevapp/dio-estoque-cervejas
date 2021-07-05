@@ -24,6 +24,7 @@ public class CervejaService {
     public CervejaDTO criar(CervejaDTO cervejaDTO) throws CervejaJaRegistradaException {
         verificarSeJaEstaRegistrado(cervejaDTO.getNome());
         Cerveja cerveja = cervejaMapper.toModel(cervejaDTO);
+
         Cerveja salvarCerveja = cervejaRepository.save(cerveja);
         return cervejaMapper.toDTO(salvarCerveja);
     }

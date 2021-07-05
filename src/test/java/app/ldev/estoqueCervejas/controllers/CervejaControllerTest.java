@@ -62,6 +62,85 @@ public class CervejaControllerTest {
                 .andExpect(jsonPath("$.tipo", is(cervejaDTO.getTipo().toString())));
     }
 
+    @Test
+    void quandoOPOSTEChamadoSemCampoObrigatorioUmErroERetornado() throws Exception {
+        
+        // Dado
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        cervejaDTO.setMarca(null);
+
+        // Então
+        mockMvc.perform(post(CERVEJA_API_URL_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(cervejaDTO)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void quandoGETEChamadoComUmNomeValidoOStatusDeOKERetornado() throws Exception {
+
+        // Dado
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+
+        // Quando
+        when(cervejaService.buscarPorNome(cervejaDTO.getNome())).thenReturn(cervejaDTO);
+
+        // Então
+        mockMvc.perform(MockMvcRequestBuilders.get(CERVEJA_API_URL_PATH + "/" + cervejaDTO.getNome())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome", is(cervejaDTO.getNome())))
+                .andExpect(jsonPath("$.marca", is(cervejaDTO.getMarca())))
+                .andExpect(jsonPath("$.tipo", is(cervejaDTO.getTipo().toString())));
+    }
+
+    @Test
+    void quandoGETEChamadoSemNomeRegistradoOStatusNaoEncontradaERetornado() throws Exception {
+
+        // Dado
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+
+        // Quando
+        when(cervejaService.buscarPorNome(cervejaDTO.getNome())).thenThrow(CervejaNaoEncontradaException.class);
+
+        // Então
+        mockMvc.perform(MockMvcRequestBuilders.get(CERVEJA_API_URL_PATH + "/" + cervejaDTO.getNome())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void quandoGETListarTodosEChamadaOStatusDeOKERetornado() throws Exception {
+
+        // Dado
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+
+        // Quando
+        when(cervejaService.listarTodos()).thenReturn(Collections.singletonList(cervejaDTO));
+
+        // Então
+        mockMvc.perform(MockMvcRequestBuilders.get(CERVEJA_API_URL_PATH)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nome", is(cervejaDTO.getNome())))
+                .andExpect(jsonPath("$[0].marca", is(cervejaDTO.getMarca())))
+                .andExpect(jsonPath("$[0].tipo", is(cervejaDTO.getTipo().toString())));
+    }
+
+    @Test
+    void quandoGETListarTodosSemCervejasEChamadaOStatusDeOKERtornado() throws Exception {
+
+        // Dado
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+
+        // Quando
+        when(cervejaService.listarTodos()).thenReturn(Collections.singletonList(cervejaDTO));
+
+        // Então
+        mockMvc.perform(MockMvcRequestBuilders.get(CERVEJA_API_URL_PATH)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
 
     @Test
     void quandoDELETEEChamadoComUmIDValidoNenhumStatusDeConteudoEretornado() throws Exception {
@@ -83,7 +162,7 @@ public class CervejaControllerTest {
         //when
         doThrow(CervejaNaoEncontradaException.class).when(cervejaService).deletarPorId(ID_CERVEJA_INVALIDO);
 
-        // then
+        // Então
         mockMvc.perform(MockMvcRequestBuilders.delete(CERVEJA_API_URL_PATH + "/" + ID_CERVEJA_INVALIDO)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
