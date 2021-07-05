@@ -2,6 +2,8 @@ package app.ldev.estoqueCervejas.controllers;
 
 import app.ldev.estoqueCervejas.builder.CervejaDTOBuilder;
 import app.ldev.estoqueCervejas.dto.CervejaDTO;
+import app.ldev.estoqueCervejas.dto.QuantidadeDTO;
+import app.ldev.estoqueCervejas.exception.CervejaEstoqueExcedidoException;
 import app.ldev.estoqueCervejas.exception.CervejaNaoEncontradaException;
 import app.ldev.estoqueCervejas.services.CervejaService;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,7 @@ import java.util.Collections;
 import static app.ldev.estoqueCervejas.utils.JsonConvertionUtils.asJsonString;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,6 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class CervejaControllerTest {
     private static final String CERVEJA_API_URL_PATH = "/api/v1/cervejas";
     private static final long ID_CERVEJA_INVALIDO = 2l;
+    private static final String CERVEJA_API_SUBPATH_INCREMENTO_URL = "/incremento";
+    private static final String CERVEJA_API_SUBPATH_DECREMENTO_URL = "/decremento";
 
     private MockMvc mockMvc;
 
@@ -166,5 +171,109 @@ public class CervejaControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.delete(CERVEJA_API_URL_PATH + "/" + ID_CERVEJA_INVALIDO)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void quandoPATCHEChamadoParaIncrementoDoEstoqueOStatusOkERetornado() throws Exception {
+
+        QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
+                .quantidade(10)
+                .build();
+
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        cervejaDTO.setQuantidade(cervejaDTO.getQuantidade() + quantidadeDTO.getQuantidade());
+
+        when(cervejaService.incremento(cervejaDTO.getId(), quantidadeDTO.getQuantidade())).thenReturn(cervejaDTO);
+
+        mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + cervejaDTO.getId() + CERVEJA_API_SUBPATH_INCREMENTO_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(quantidadeDTO))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome", is(cervejaDTO.getNome())))
+                .andExpect(jsonPath("$.marca", is(cervejaDTO.getMarca())))
+                .andExpect(jsonPath("$.tipo", is(cervejaDTO.getTipo().toString())))
+                .andExpect(jsonPath("$.quantidade", is(cervejaDTO.getQuantidade())));
+    }
+
+    @Test
+    void quandoPATCHEChamadoParaIncrementoMaisQueOMaximoEntaoOStatusDeSolicitacaoInvalidaERetornado() throws Exception {
+
+        QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
+                .quantidade(30)
+                .build();
+
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        cervejaDTO.setQuantidade(cervejaDTO.getQuantidade() + quantidadeDTO.getQuantidade());
+
+        when(cervejaService.incremento(cervejaDTO.getId(), quantidadeDTO.getQuantidade())).thenThrow(CervejaEstoqueExcedidoException.class);
+
+        mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + cervejaDTO.getId() + CERVEJA_API_SUBPATH_INCREMENTO_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(quantidadeDTO))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void quandoPATCHChamadoComIdInvalidaParaIncrementoOStatusNaoEncontradoERetornado() throws Exception {
+
+        QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
+                .quantidade(30)
+                .build();
+
+        when(cervejaService.incremento(ID_CERVEJA_INVALIDO, quantidadeDTO.getQuantidade())).thenThrow(CervejaNaoEncontradaException.class);
+        mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + ID_CERVEJA_INVALIDO + CERVEJA_API_SUBPATH_INCREMENTO_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(quantidadeDTO)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void quandoPATCHChamadoParaDecrementoOStatusOkERetornado() throws Exception {
+
+        QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
+                .quantidade(5)
+                .build();
+
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        cervejaDTO.setQuantidade(cervejaDTO.getQuantidade() + quantidadeDTO.getQuantidade());
+
+        when(cervejaService.decremento(cervejaDTO.getId(), quantidadeDTO.getQuantidade())).thenReturn(cervejaDTO);
+
+        mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + cervejaDTO.getId() + CERVEJA_API_SUBPATH_DECREMENTO_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(quantidadeDTO))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome", is(cervejaDTO.getNome())))
+                .andExpect(jsonPath("$.marca", is(cervejaDTO.getMarca())))
+                .andExpect(jsonPath("$.tipo", is(cervejaDTO.getTipo().toString())))
+                .andExpect(jsonPath("$.quantidade", is(cervejaDTO.getQuantidade())));
+    }
+
+    @Test
+    void quandoPATCHChamadoParaDecrementoInferiorAZeroOStatusDeSolicitacaoIncorretaERetornado() throws Exception {
+
+        QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
+                .quantidade(60)
+                .build();
+
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        cervejaDTO.setQuantidade(cervejaDTO.getQuantidade() + quantidadeDTO.getQuantidade());
+
+        when(cervejaService.decremento(cervejaDTO.getId(), quantidadeDTO.getQuantidade())).thenThrow(CervejaEstoqueExcedidoException.class);
+
+        mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + cervejaDTO.getId() + CERVEJA_API_SUBPATH_DECREMENTO_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(quantidadeDTO))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void quandoPATCHChamadoComIdInvalidoParaDecrementoOStatusNaoEncontradoERetornado() throws Exception {
+
+        QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
+                .quantidade(5)
+                .build();
+
+        when(cervejaService.decremento(ID_CERVEJA_INVALIDO, quantidadeDTO.getQuantidade())).thenThrow(CervejaEstoqueExcedidoException.class);
+        mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + ID_CERVEJA_INVALIDO + CERVEJA_API_SUBPATH_DECREMENTO_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(quantidadeDTO)))
+                .andExpect(status().isBadRequest());
     }
 }

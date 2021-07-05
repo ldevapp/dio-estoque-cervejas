@@ -1,6 +1,8 @@
 package app.ldev.estoqueCervejas.controllers;
 
 import app.ldev.estoqueCervejas.dto.CervejaDTO;
+import app.ldev.estoqueCervejas.dto.QuantidadeDTO;
+import app.ldev.estoqueCervejas.exception.CervejaEstoqueExcedidoException;
 import app.ldev.estoqueCervejas.exception.CervejaJaRegistradaException;
 import app.ldev.estoqueCervejas.exception.CervejaNaoEncontradaException;
 import app.ldev.estoqueCervejas.services.CervejaService;
@@ -43,5 +45,15 @@ public class CervejaController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletarPorId(@PathVariable Long id) throws CervejaNaoEncontradaException {
         cervejaService.deletarPorId(id);
+    }
+
+    @PatchMapping("/{id}/incremento")
+    public CervejaDTO incremento(@PathVariable Long id, @RequestBody @Valid QuantidadeDTO quantidadeDTO) throws CervejaNaoEncontradaException, CervejaEstoqueExcedidoException {
+        return cervejaService.incremento(id, quantidadeDTO.getQuantidade());
+    }
+
+    @PatchMapping("/{id}/decremento")
+    public CervejaDTO decremento(@PathVariable Long id, @RequestBody @Valid QuantidadeDTO quantidadeDTO) throws CervejaNaoEncontradaException, CervejaEstoqueExcedidoException {
+        return cervejaService.decremento(id, quantidadeDTO.getQuantidade());
     }
 }

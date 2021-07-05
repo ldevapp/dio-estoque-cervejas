@@ -1,7 +1,9 @@
 package app.ldev.estoqueCervejas.services;
 
+import app.ldev.estoqueCervejas.EstoqueCervejasApplication;
 import app.ldev.estoqueCervejas.dto.CervejaDTO;
 import app.ldev.estoqueCervejas.entity.Cerveja;
+import app.ldev.estoqueCervejas.exception.CervejaEstoqueExcedidoException;
 import app.ldev.estoqueCervejas.exception.CervejaJaRegistradaException;
 import app.ldev.estoqueCervejas.exception.CervejaNaoEncontradaException;
 import app.ldev.estoqueCervejas.mapper.CervejaMapper;
@@ -57,5 +59,27 @@ public class CervejaService {
     private Cerveja verificarSeExistePorId(Long id) throws CervejaNaoEncontradaException {
         return cervejaRepository.findById(id)
                 .orElseThrow(() -> new CervejaNaoEncontradaException(id));
+    }
+
+    public CervejaDTO incremento(Long id, int quantidade) throws CervejaNaoEncontradaException, CervejaEstoqueExcedidoException {
+        Cerveja cervejaParaIncrementarEstoque = verificarSeExistePorId(id);
+        int estoqueCervejaAposIncremento = quantidade + cervejaParaIncrementarEstoque.getQuantidade();
+        if (estoqueCervejaAposIncremento <= cervejaParaIncrementarEstoque.getMax()) {
+            cervejaParaIncrementarEstoque.setQuantidade(estoqueCervejaAposIncremento);
+            Cerveja cervejaIncrementada = cervejaRepository.save(cervejaParaIncrementarEstoque);
+            return cervejaMapper.toDTO(cervejaIncrementada);
+        }
+        throw new CervejaEstoqueExcedidoException(id, quantidade);
+    }
+
+    public CervejaDTO decremento(Long id, int quantidade) throws CervejaNaoEncontradaException, CervejaEstoqueExcedidoException {
+        Cerveja cervejaParaDecrementar = verificarSeExistePorId(id);
+        int cervejaDecrementadaEstoque = cervejaParaDecrementar.getQuantidade() - quantidade;
+        if (cervejaDecrementadaEstoque >= 0) {
+            cervejaParaDecrementar.setQuantidade(cervejaDecrementadaEstoque);
+            Cerveja decrementedBeerStock = cervejaRepository.save(cervejaParaDecrementar);
+            return cervejaMapper.toDTO(decrementedBeerStock);
+        }
+        throw new CervejaEstoqueExcedidoException(id, quantidade);
     }
 }
